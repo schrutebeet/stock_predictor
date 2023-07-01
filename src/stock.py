@@ -14,13 +14,8 @@ class Stock:
     def __init__(self, stock_symbol):
         self.stock_symbol = stock_symbol
         self.api_key = auth.api_key
-        self.data = pd.DataFrame()
-        self.x_train = pd.DataFrame()
-        self.y_train = pd.DataFrame()
-        self.x_test = pd.DataFrame()
-        self.y_test = pd.DataFrame()
 
-    def fetch_intraday(self, start_date=None, end_date=None):
+    def fetch_intraday(self, start_date=None, end_date=None) -> pd.DataFrame:
         """
         Fetch intraday data for a particular stock instance.
 
@@ -51,7 +46,7 @@ class Stock:
         df.columns = ['open', 'high', 'low', 'close', 'volume']
         self.data = df
 
-    def fetch_daily(self, start_date=None, end_date=None):
+    def fetch_daily(self, start_date=None, end_date=None) -> pd.DataFrame:
         """
         Fetch daily data for a particular stock instance.
 
@@ -82,7 +77,7 @@ class Stock:
         df.columns = ['open', 'high', 'low', 'non_adj_close', 'close', 'volume', 'dividend_amount', 'split_coeff']
         self.data = df
     
-    def _treat_missing_data(self):
+    def _treat_missing_data(self) -> pd.DataFrame:
         """
         If a value is missing, fill it with the previous value
 
@@ -96,7 +91,7 @@ class Stock:
         return df
     
     
-    def prepare_train_test_sets(self, train_size, rolling_window, scale=False):
+    def prepare_train_test_sets(self, train_size, rolling_window, scale=False) -> tuple:
         """
         Once we have the core information on a stock, we can proceed to prepare the data for modelling purposes.
 
@@ -140,6 +135,9 @@ class Stock:
         test_data = close_prices[training_data_len-rolling_window: ].reshape(-1,1)
         if scale:
             test_data = scaler.transform(test_data)
+            self.scaler = scaler
+        else:
+            self.scaler = scale
         
         x_test = np.empty((0, rolling_window))
         y_test = test_data[rolling_window: , 0]
@@ -149,4 +147,7 @@ class Stock:
 
         x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
         
-        return x_train, y_train, x_test, y_test
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_test = x_test
+        self.y_test = y_test
