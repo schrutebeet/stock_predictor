@@ -11,5 +11,5 @@ class Rectagle:
     def create_square3(a):
         return a**2
     
-poligon = Rectagle.create_square2(5)
+poligon = Rectagle.create_square3(5)
 print(poligon)

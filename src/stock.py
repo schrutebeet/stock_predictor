@@ -107,6 +107,8 @@ class Stock:
             - x_test (np.array): Set of past prices for testing purposes.
             - y_test (np.array): Target to be predicted by the x_test set during testing.
         """
+        self.train_size = train_size
+        self.rolling_window = rolling_window
         if not 0 < train_size < 1:
             raise ValueError("Argument 'train_size' must be a value between 0 and 1")
         if not rolling_window > 0:
