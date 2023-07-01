@@ -20,6 +20,7 @@ class Model:
         self.stock_inst = stock_inst
 
     def lstm_nn(self, viz=True):
+        self.model_name = 'Long-Short Term Memory'
         model = keras.Sequential()
         model.add(keras.layers.LSTM(100, return_sequences=True, input_shape=(self.stock_inst.x_train.shape[1], 1)))
         model.add(keras.layers.LSTM(100, return_sequences=False))
@@ -28,13 +29,15 @@ class Model:
         print(model.summary())
         model.compile(optimizer='adam', loss='mean_squared_error')
         model.fit(self.stock_inst.x_train, self.stock_inst.y_train, batch_size=50, epochs=3)
-        self.predictions = model.predict(self.stock_inst.x_test)
+        self.scaler_preds = model.predict(self.stock_inst.x_test)
         if self.stock_inst.scaler:
-            self.predictions = self.stock_inst.scaler.inverse_transform(self.predictions)
-        rmse = np.sqrt(np.mean(self.predictions - self.stock_inst.y_test)**2)
+            self.real_preds = self.stock_inst.scaler.inverse_transform(self.scaler_preds)
+        else:
+            self.real_preds = self.scaler_preds
+        rmse = np.sqrt(np.mean(self.real_preds - self.stock_inst.y_test)**2)
+        self._binary_pred()
         if viz:
             self._viz_predictions()
-        return rmse, self.predictions
     
     def arima(self):
         for t in range(len(test)):
@@ -52,7 +55,7 @@ class Model:
         training_data_len = int(round(data.shape[0] * self.stock_inst.train_size, 0))
         train = data[:training_data_len].copy()
         test = data[training_data_len:].copy()
-        test.loc[:, 'preds'] = self.predictions
+        test.loc[:, 'preds'] = self.real_preds
         plt.figure(figsize=(16,8))
         plt.title('Model')
         plt.xlabel('Date')
@@ -63,3 +66,29 @@ class Model:
         image_path = f'opt/{self.stock_inst.stock_symbol}_lstm_plot.png'
         plt.savefig(image_path)
         plt.close()
+
+    def _binary_pred(self):
+        hit_list = []
+        total_iters = self.stock_inst.x_test.shape[0]
+        for iter in range(total_iters):
+            # Last known price in test
+            val_i = self.stock_inst.x_test[iter][-1]
+            pred_i = self.scaler_preds[iter]
+            future_i = self.stock_inst.y_test[iter]
+            # Decision taken based on prediction
+            choice = pred_i - val_i > 0
+            # Realization the next day
+            realization = future_i - val_i > 0
+            hit = self._XNOR(choice, realization)
+            hit_list.append(hit)
+
+        accuracy = sum(hit_list) / len(hit_list)
+        print(f'\n\nAccuracy of the {self.model_name}: {accuracy*100:.2f}%, from {total_iters} iterations\n')
+
+    @staticmethod
+    def _XNOR(a,b):
+        if(a == b):
+            return True
+        else:
+            return False
+

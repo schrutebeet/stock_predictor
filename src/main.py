@@ -14,7 +14,7 @@ def timeit(func):
 
 class Runner():
     @staticmethod
-    def run(stock, fetch_type='fetch_daily', train_size=0.8, rolling_window=60, scale=False):
+    def run(stock, fetch_type='fetch_daily', train_size=0.8, rolling_window=60, scale=True):
         print(f'Running framework for {stock.stock_symbol}')
         getattr(stock, fetch_type)()
         stock.prepare_train_test_sets(train_size, rolling_window, scale=scale)

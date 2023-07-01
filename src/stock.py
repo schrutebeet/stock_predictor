@@ -91,7 +91,7 @@ class Stock:
         return df
     
     
-    def prepare_train_test_sets(self, train_size, rolling_window, scale=False) -> tuple:
+    def prepare_train_test_sets(self, train_size, rolling_window, scale) -> tuple:
         """
         Once we have the core information on a stock, we can proceed to prepare the data for modelling purposes.
 
@@ -121,7 +121,7 @@ class Stock:
         if scale:
             scaler = MinMaxScaler()
             train_data = scaler.fit_transform(train_data)
-        
+            
         x_train = np.empty((0, rolling_window))
         y_train = train_data[rolling_window: , 0]
 
