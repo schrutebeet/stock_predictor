@@ -4,16 +4,20 @@ from stock import Stock
 from models import Model
 
 def timeit(func):
-	def wrapper(*args, **kwargs):
-		start = time.time()
-		# runs the function
-		function = func(*args, **kwargs)
-		end = time.time()
-		print(f'Elapsed time: {(end - start):.2f} seconds')
-	return wrapper
+    @staticmethod
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        # runs the function
+        function = func(*args, **kwargs)
+        end = time.time()
+        print("-"*25)
+        print(f'Elapsed time: {(end - start):.2f} seconds')
+        print("-"*25, "\n")
+        return function
+    return wrapper
 
 class Runner():
-    @staticmethod
+    @timeit
     def run(stock, fetch_type='fetch_daily', train_size=0.8, rolling_window=60, scale=True):
         print(f'Running framework for {stock.stock_symbol}')
         getattr(stock, fetch_type)()
@@ -27,7 +31,8 @@ class Runner():
 def main():
     arguments = sys.argv
     try:
-        stock = Stock(arguments[1])
+        #stock = Stock(arguments[1])
+        stock = Stock('AAPL')
     except Exception as err:
         comment = "Please, add a stock symbol argument when running the framework."
         err_message = f"{type(err).__name__}: {str(err)}. {comment}"
