@@ -14,6 +14,7 @@ class Stock:
     def __init__(self, stock_symbol):
         self.stock_symbol = stock_symbol
         self.api_key = auth.api_key
+        self.data = pd.DataFrame()
 
     def fetch_intraday(self, start_date=None, end_date=None) -> pd.DataFrame:
         """
@@ -46,7 +47,7 @@ class Stock:
         df.columns = ['open', 'high', 'low', 'close', 'volume']
         self.data = df
 
-    def fetch_daily(self, start_date=None, end_date=None) -> pd.DataFrame:
+    def fetch_daily(self, start_date=None, end_date=None) -> None:
         """
         Fetch daily data for a particular stock instance.
 
@@ -61,22 +62,28 @@ class Stock:
         """
         url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED'\
               f'&symbol={self.stock_symbol}&outputsize=full&apikey={self.api_key}'
-        r = requests.get(url)
-        json_data = r.json()['Time Series (Daily)']
+        try:
+            r = requests.get(url)
+        except requests.exceptions.ConnectionError as e:
+            print('WARNING: COULD NOT CONNECT TO THE INTERNET')
+            return None
+        try:
+            json_data = r.json()['Time Series (Daily)']
+        except KeyError as err:
+            print(f'WARNING: NO DATA FOUND FOR TICKER {self.stock_symbol}')
+            return None
         df = pd.DataFrame(json_data).T.sort_index()
         df.index = pd.to_datetime(df.index)
         df = df.apply(pd.to_numeric, errors='coerce')
-
         if start_date is not None:
             start_date = pd.to_datetime(start_date)
             df = df[df.index >= start_date]
         if end_date is not None:
             end_date = pd.to_datetime(end_date)
             df = df[df.index <= end_date]
-
         df.columns = ['open', 'high', 'low', 'non_adj_close', 'close', 'volume', 'dividend_amount', 'split_coeff']
         self.data = df
-    
+        
     def _treat_missing_data(self) -> pd.DataFrame:
         """
         If a value is missing, fill it with the previous value
@@ -90,8 +97,7 @@ class Stock:
         df = self.data.fillna(method='ffill')
         return df
     
-    
-    def prepare_train_test_sets(self, train_size, rolling_window, scale) -> tuple:
+    def prepare_train_test_sets(self, train_size, rolling_window, scale) -> None:
         """
         Once we have the core information on a stock, we can proceed to prepare the data for modelling purposes.
 
@@ -114,23 +120,27 @@ class Stock:
         if not rolling_window > 0:
             raise ValueError("Argument 'rolling_window' must be higher than 0")
         df = self._treat_missing_data()
-        close_prices = df['close'].to_numpy()
+        try:
+            close_prices = df['close'].to_numpy()
+        except KeyError:
+            print('No "close" column found. Dataframe is probably empty. See warnings above.')
+            return None
         # We start with the train set
         training_data_len = int(round(len(close_prices)* train_size, 0))
         train_data = close_prices[0: training_data_len].reshape(-1,1)
         if scale:
             scaler = MinMaxScaler()
             train_data = scaler.fit_transform(train_data)
+            train_data = scaler.fit_transform(train_data)
+            
+            train_data = scaler.fit_transform(train_data)   
             
         x_train = np.empty((0, rolling_window))
         y_train = train_data[rolling_window: , 0]
-
         for i in range(rolling_window, len(train_data)):
             x_train = np.vstack((x_train, train_data[i-rolling_window:i, 0]))
-        
         # Adding a third dimension as a requirement from TensorFlow 
         x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-
         # Now, let's proceed with the test set
         # We subtract 60 because to output the first prediction on test 
         # we need data on the 60 last close prices
@@ -140,14 +150,14 @@ class Stock:
             self.scaler = scaler
         else:
             self.scaler = scale
-        
         x_test = np.empty((0, rolling_window))
         y_test = test_data[rolling_window: , 0]
-
         for i in range(rolling_window, len(test_data)):
             x_test = np.vstack((x_test, test_data[i-rolling_window: i, 0]))
-
         x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+        x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+        
+        x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1)) 
         
         self.x_train = x_train
         self.y_train = y_train
