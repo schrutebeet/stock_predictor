@@ -20,7 +20,7 @@ def prepare_train_test_sets(df, train_size, rolling_window):
     df = treat_missing_data(df)
     close_prices = df['close'].to_numpy()
     # We start with the train set
-    training_data_len = int(round(len(close_prices)* train_size, 0))
+    training_data_len = int(round(len(close_prices) * train_size, 0))
     scaler = MinMaxScaler(feature_range=(0,1))
     train_data = close_prices[0: training_data_len]
     train_data = scaler.fit_transform(train_data.reshape(-1,1))

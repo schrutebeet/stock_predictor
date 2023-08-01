@@ -26,13 +26,12 @@ class Runner():
         base_for_model.lstm_nn(viz=True)
 
 
-
-
 def main():
     arguments = sys.argv
     try:
-        #stock = Stock(arguments[1])
-        stock = Stock('AAPL')
+        stock_names = arguments[1]
+        print(stock_names)
+        stock = Stock(stock_names)
     except Exception as err:
         comment = "Please, add a stock symbol argument when running the framework."
         err_message = f"{type(err).__name__}: {str(err)}. {comment}"

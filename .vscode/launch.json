@@ -2,12 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Your Configuration",
+            "name": "Program pre-running",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/main.py",
+            "program": "/home/schrute_beet/Github/stock_predictor/src/main.py",
+            "python": "/home/schrute_beet/Github/venvs/stock_venv/bin/python",
+            "args": ["AAPL"],
             "env": {
-                "PYTHONPATH": "${workspaceFolder}"
+                "PYTHONPATH": "/home/schrute_beet/Github/stock_predictor/"
             }
         }
     ]

@@ -1,7 +1,7 @@
 import numpy as np
 from tensorflow import keras
 import matplotlib.pyplot as plt
-from statsmodels.tsa.arima.model import ARIMA
+#from statsmodels.tsa.arima.model import ARIMA
 # import arch
 
 class Model:
